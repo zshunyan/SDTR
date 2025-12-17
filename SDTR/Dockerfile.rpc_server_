@@ -1,0 +1,28 @@
+# Imagen base de Ubuntu
+FROM ubuntu:latest
+
+# Instalar paquetes necesarios
+RUN apt update && apt install -y \
+    rpcbind \
+    nfs-common \
+    nano \
+    vim \
+    gcc \ 
+    libtirpc-dev \
+    openssh-server \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear directorios y configurar SSH
+RUN mkdir /var/run/sshd
+
+# Crear un usuario para SSH con contrasea "rpcpass"
+RUN useradd -m -s /bin/bash rpcuserserver && echo "rpcuserserver:rpcpass" | chpasswd
+
+# Permitir acceso SSH con contrasea
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# Exponer puertos RPC y SSH
+EXPOSE 111/tcp 111/udp 22/tcp
+
+# Iniciar rpcbind, SSH y mantener el contenedor activo
+CMD rpcbind && service ssh start && tail -f /dev/null
